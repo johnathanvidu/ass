@@ -12,7 +12,7 @@ import subprocess
 
 # logging
 logger = logging.getLogger()
-level = logging.INFO
+level = logging.DEBUG
 logger.setLevel(level)
 handler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter('- %(message)s | %(asctime)s')
@@ -46,7 +46,7 @@ def scan_tracks(jmkv, audio_lang, subs_lang):
 		if type not in result:
 			result[type] = []
 
-		uid = properties['uid']
+		uid = properties['number']
 		track_name = properties['track_name'] if 'track_name' in properties else ''
 		lang = properties['language']
 		default = properties['default_track']
@@ -67,7 +67,7 @@ def set_default_audio(mkv, audio):
 		track_name = atrack.track_name.lower()
 		if 'commentary' in track_name:
 			continue
-		if 'song' in track_name:
+		if 'song' in track_name or 'sing' in track_name:
 			continue
 
 		correct_found = True
@@ -95,10 +95,13 @@ def set_default_subtitles(mkv, subtitles):
 
 		track_name = strack.track_name.lower()
 		if 'commentary' in track_name:
+			edits = edits + ['--edit', f'track:{int(strack.uid)}', '--set', 'flag-default=0']
 			continue
 		if 'song' in track_name:
+			edits = edits + ['--edit', f'track:{int(strack.uid)}', '--set', 'flag-default=0']
 			continue
-		if 'sign' in track_name:
+		if 'sing' in track_name:
+			edits = edits + ['--edit', f'track:{int(strack.uid)}', '--set', 'flag-default=0']
 			continue
 
 		correct_found = True
@@ -110,7 +113,8 @@ def set_default_subtitles(mkv, subtitles):
 		return
 
 	logger.info('mkvpropedit out')
-	proc = subprocess.run(['mkvpropedit', mkv, '--edit', f'track:{int(strack.uid)}', '--set', 'flag-default=1'])
+	#proc = subprocess.run(['mkvpropedit', mkv, '--edit', f'track:{int(strack.uid)}', '--set', 'flag-default=1'])
+	proc = subprocess.run(['mkvpropedit', mkv] + edits)
 	logger.debug(' '.join(proc.args))
 
 
